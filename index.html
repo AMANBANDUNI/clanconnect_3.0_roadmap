@@ -121,19 +121,37 @@
   .cre li::before{content:"▸";position:absolute;left:0;color:#C4B5FD;font-size:11px}
 
   /* ---------- CREDITS / CALCULATOR ---------- */
-  .calc{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;margin-top:42px;display:grid;grid-template-columns:1.25fr 1fr}
-  @media(max-width:860px){.calc{grid-template-columns:1fr}}
+  .calc{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);margin-top:42px;display:grid;grid-template-columns:1.25fr 1fr}
+  @media(max-width:860px){.calc{grid-template-columns:1fr}.calc .right{border-radius:0 0 20px 20px!important}}
   .calc .left{padding:30px}
   .calc h3{font-size:20px;font-weight:700;margin-bottom:4px}
-  .calc .hint{font-size:14px;color:var(--grey);margin-bottom:20px}
+  .calc .hint{font-size:14px;color:var(--grey);margin-bottom:14px}
+  .calc-how{background:var(--light);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:20px;font-size:13px;color:var(--grey);line-height:1.55}
+  .calc-how b{color:var(--dark)}
+  .calc-how .cr{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-weight:700;color:var(--blue);font-size:12px}
+  .calc-foot{font-size:12.5px;color:var(--grey);margin-top:14px;line-height:1.55}
   .act{display:flex;align-items:center;gap:14px;padding:11px 0;border-bottom:1px dashed var(--line)}
-  .act .name{flex:1;font-size:14.5px;font-weight:600}
+  .act .name{flex:1;font-size:14.5px;font-weight:600;display:flex;align-items:center;gap:7px}
+  /* ---------- INFO TOOLTIP ---------- */
+  .info{position:relative;flex:none;width:17px;height:17px;border-radius:50%;border:1.5px solid var(--line);
+    display:inline-grid;place-items:center;font-size:11px;font-weight:700;font-family:'Poppins';
+    color:var(--grey);cursor:help;transition:.15s;font-style:normal}
+  .info:hover,.info:focus{background:var(--blue);border-color:var(--blue);color:#fff;outline:none}
+  .info .tip{position:absolute;left:50%;bottom:calc(100% + 10px);transform:translateX(-50%) translateY(4px);
+    width:248px;background:var(--dark);color:#E5EDF5;font-size:12.5px;font-weight:500;line-height:1.5;
+    font-family:'Open Sans';text-align:left;padding:11px 13px;border-radius:10px;
+    box-shadow:0 12px 30px -10px rgba(15,23,42,.5);opacity:0;visibility:hidden;pointer-events:none;
+    transition:opacity .18s,transform .18s;z-index:50}
+  .info .tip::after{content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);
+    border:6px solid transparent;border-top-color:var(--dark)}
+  .info:hover .tip,.info:focus .tip{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+  @media(max-width:560px){.info .tip{width:200px}}
   .act .cost{font-size:12px;color:var(--grey);font-weight:600;min-width:70px}
   .stepper{display:flex;align-items:center;gap:10px}
   .stepper button{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:18px;font-weight:700;color:var(--blue);cursor:pointer;transition:.15s}
   .stepper button:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
   .stepper .qty{min-width:26px;text-align:center;font-weight:700;font-family:'Poppins'}
-  .calc .right{background:linear-gradient(160deg,#0F172A,#1b1140);color:#fff;padding:30px;display:flex;flex-direction:column;justify-content:center}
+  .calc .right{background:linear-gradient(160deg,#0F172A,#1b1140);color:#fff;padding:30px;display:flex;flex-direction:column;justify-content:center;border-radius:0 20px 20px 0}
   .calc .total{font-family:'Poppins';font-size:52px;font-weight:800;line-height:1}
   .calc .total small{font-size:18px;font-weight:600;color:#94A3B8}
   .meter{height:10px;border-radius:999px;background:rgba(255,255,255,.14);margin:20px 0 8px;overflow:hidden}
@@ -325,7 +343,16 @@
       <div class="left">
         <h3>💡 Credit calculator</h3>
         <p class="hint">Estimate a brand's monthly AI usage.</p>
+        <div class="calc-how">
+          Every AI action spends <b>credits</b> from your monthly plan.
+          <span class="cr">1&nbsp;cr&nbsp;·&nbsp;each</span> means <b>1 credit each time you use it</b> (“cr” = credit, “each” = per use).
+          Set how many times you'd run each action per month with the <b>– / +</b> buttons — we multiply
+          <b>cost × your count</b> for every row and add them up to estimate your total. Hover any
+          <span style="display:inline-grid;place-items:center;width:16px;height:16px;border:1.5px solid var(--line);border-radius:50%;font-size:10px;font-weight:700;color:var(--grey);vertical-align:middle">i</span>
+          to see what an action does.
+        </div>
         <div id="actList"></div>
+        <p class="calc-foot"><b>Total credits</b> = sum of (cost × count) across all rows. We then recommend the smallest plan your total fits within.</p>
       </div>
       <div class="right">
         <div style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#94A3B8;font-weight:700">Estimated monthly credits</div>
@@ -500,14 +527,14 @@ useCases.forEach(u=>{
 
 // ---------- Credit calculator ----------
 const actions = [
-  {n:'Natural-language search', cost:1, q:10},
-  {n:'Deep search + external look-up', cost:3, q:4},
-  {n:'Shortlist ranking + "why"', cost:2, q:6},
-  {n:'Draft outreach DM', cost:1, q:10},
-  {n:'Campaign brief generation', cost:5, q:2},
-  {n:'Script generation (per variant)', cost:2, q:6},
-  {n:'Campaign report / Brand Pulse', cost:10, q:2},
-  {n:'Affiliate pool generation', cost:8, q:1},
+  {n:'Natural-language search', cost:1, q:10, info:'Find creators by typing a plain-English brief (e.g. "fitness creators in Mumbai, 50k+ reach"). The AI parses intent and returns matches from our network. Charged per search you run.'},
+  {n:'Deep search + external look-up', cost:3, q:4, info:'Goes beyond our database to enrich a creator profile with live external signals — recent posts, audience quality and growth trends. Costs more as it pulls fresh third-party data each time.'},
+  {n:'Shortlist ranking + "why"', cost:2, q:6, info:'Scores your shortlisted creators for fit and ranks them, with a short AI explanation of why each one made the cut. Charged once per shortlist you generate.'},
+  {n:'Draft outreach DM', cost:1, q:10, info:'Auto-writes a personalised first-contact message for a creator, tuned to their niche and your campaign. One credit per draft — regenerate as many variants as you like.'},
+  {n:'Campaign brief generation', cost:5, q:2, info:'Turns your goals into a full campaign brief — objectives, deliverables, do/don\'t guidelines and timelines — ready to share with creators. Charged per brief produced.'},
+  {n:'Script generation (per variant)', cost:2, q:6, info:'Produces a ready-to-shoot content script for a creator. Each variant (hook, angle or platform version) is billed separately so you can A/B test ideas.'},
+  {n:'Campaign report / Brand Pulse', cost:10, q:2, info:'Generates a full performance report — reach, engagement, conversions and AI insights on what worked. Our most compute-heavy action, so it carries the highest per-use cost.'},
+  {n:'Affiliate pool generation', cost:8, q:1, info:'Builds a curated pool of affiliate-ready creators with tracking links and projected ROI. Charged per pool generated for a campaign.'},
 ];
 const plans = [
   {name:'Starter (Free)', limit:50, desc:'50 credits / month — perfect to try the AI.'},
@@ -519,7 +546,7 @@ const actListEl = document.getElementById('actList');
 actions.forEach((a,i)=>{
   const row = document.createElement('div');
   row.className='act';
-  row.innerHTML = `<div class="name">${a.n}</div><div class="cost">${a.cost} cr · each</div>
+  row.innerHTML = `<div class="name">${a.n}<span class="info" tabindex="0" role="button" aria-label="${a.n}: ${a.info.replace(/"/g,'&quot;')}">i<span class="tip">${a.info}</span></span></div><div class="cost">${a.cost} cr · each</div>
     <div class="stepper"><button data-d="-1">−</button><div class="qty" id="q${i}">${a.q}</div><button data-d="1">+</button></div>`;
   actListEl.appendChild(row);
   row.querySelectorAll('button').forEach(b=> b.addEventListener('click', ()=>{
