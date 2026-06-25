@@ -339,10 +339,17 @@
     <p class="lead">Each plan includes a monthly credit allowance. AI actions spend credits — heavier actions cost more. Build your month below and see which plan fits.</p>
 
     <!-- CALCULATOR -->
+    <div class="toggle-wrap" style="margin-top:0;margin-bottom:-8px">
+      <div class="seg">
+        <button class="on" id="segCalcBrand">For Brands</button>
+        <button id="segCalcCreator">For Creators</button>
+      </div>
+    </div>
+
     <div class="calc">
       <div class="left">
         <h3>💡 Credit calculator</h3>
-        <p class="hint">Estimate a brand's monthly AI usage.</p>
+        <p class="hint" id="calcHint">Estimate a brand's monthly AI usage.</p>
         <div class="calc-how">
           Every AI action spends <b>credits</b> from your monthly plan.
           <span class="cr">1&nbsp;cr&nbsp;·&nbsp;each</span> means <b>1 credit each time you use it</b> (“cr” = credit, “each” = per use).
@@ -526,34 +533,67 @@ useCases.forEach(u=>{
 });
 
 // ---------- Credit calculator ----------
-const actions = [
-  {n:'Natural-language search', cost:1, q:10, info:'Find creators by typing a plain-English brief (e.g. "fitness creators in Mumbai, 50k+ reach"). The AI parses intent and returns matches from our network. Charged per search you run.'},
-  {n:'Deep search + external look-up', cost:3, q:4, info:'Goes beyond our database to enrich a creator profile with live external signals — recent posts, audience quality and growth trends. Costs more as it pulls fresh third-party data each time.'},
-  {n:'Shortlist ranking + "why"', cost:2, q:6, info:'Scores your shortlisted creators for fit and ranks them, with a short AI explanation of why each one made the cut. Charged once per shortlist you generate.'},
-  {n:'Draft outreach DM', cost:1, q:10, info:'Auto-writes a personalised first-contact message for a creator, tuned to their niche and your campaign. One credit per draft — regenerate as many variants as you like.'},
-  {n:'Campaign brief generation', cost:5, q:2, info:'Turns your goals into a full campaign brief — objectives, deliverables, do/don\'t guidelines and timelines — ready to share with creators. Charged per brief produced.'},
-  {n:'Script generation (per variant)', cost:2, q:6, info:'Produces a ready-to-shoot content script for a creator. Each variant (hook, angle or platform version) is billed separately so you can A/B test ideas.'},
-  {n:'Campaign report / Brand Pulse', cost:10, q:2, info:'Generates a full performance report — reach, engagement, conversions and AI insights on what worked. Our most compute-heavy action, so it carries the highest per-use cost.'},
-  {n:'Affiliate pool generation', cost:8, q:1, info:'Builds a curated pool of affiliate-ready creators with tracking links and projected ROI. Charged per pool generated for a campaign.'},
-];
-const plans = [
-  {name:'Starter (Free)', limit:50, desc:'50 credits / month — perfect to try the AI.'},
-  {name:'Growth', limit:1000, desc:'₹4,999/mo · 1,000 credits — discovery to tracking.'},
-  {name:'Scale', limit:5000, desc:'₹19,999/mo · 5,000 credits — full Brand Pulse + affiliate.'},
-  {name:'Enterprise', limit:Infinity, desc:'Custom credits — volume pricing & API.'}
-];
+const calcData = {
+  brand: {
+    hint: "Estimate a brand's monthly AI usage.",
+    actions: [
+      {n:'Natural-language search', cost:1, q:10, info:'Find creators by typing a plain-English brief (e.g. "fitness creators in Mumbai, 50k+ reach"). The AI parses intent and returns matches from our network. Charged per search you run.'},
+      {n:'Deep search + external look-up', cost:3, q:4, info:'Goes beyond our database to enrich a creator profile with live external signals — recent posts, audience quality and growth trends. Costs more as it pulls fresh third-party data each time.'},
+      {n:'Shortlist ranking + "why"', cost:2, q:6, info:'Scores your shortlisted creators for fit and ranks them, with a short AI explanation of why each one made the cut. Charged once per shortlist you generate.'},
+      {n:'Draft outreach DM', cost:1, q:10, info:'Auto-writes a personalised first-contact message for a creator, tuned to their niche and your campaign. One credit per draft — regenerate as many variants as you like.'},
+      {n:'Campaign brief generation', cost:5, q:2, info:'Turns your goals into a full campaign brief — objectives, deliverables, do/don\'t guidelines and timelines — ready to share with creators. Charged per brief produced.'},
+      {n:'Script generation (per variant)', cost:2, q:6, info:'Produces a ready-to-shoot content script for a creator. Each variant (hook, angle or platform version) is billed separately so you can A/B test ideas.'},
+      {n:'Campaign report / Brand Pulse', cost:10, q:2, info:'Generates a full performance report — reach, engagement, conversions and AI insights on what worked. Our most compute-heavy action, so it carries the highest per-use cost.'},
+      {n:'Affiliate pool generation', cost:8, q:1, info:'Builds a curated pool of affiliate-ready creators with tracking links and projected ROI. Charged per pool generated for a campaign.'},
+    ],
+    plans: [
+      {name:'Starter (Free)', limit:50, desc:'50 credits / month — perfect to try the AI.'},
+      {name:'Growth', limit:1000, desc:'₹4,999/mo · 1,000 credits — discovery to tracking.'},
+      {name:'Scale', limit:5000, desc:'₹19,999/mo · 5,000 credits — full Brand Pulse + affiliate.'},
+      {name:'Enterprise', limit:Infinity, desc:'Custom credits — volume pricing & API.'}
+    ]
+  },
+  creator: {
+    hint: "Estimate a creator's monthly AI usage.",
+    actions: [
+      {n:'Trending suggestions', cost:1, q:12, info:'Surfaces audio, formats and topics in your niche before they peak, with "post this now" nudges. Charged per suggestion set you pull.'},
+      {n:'Script generation (per variant)', cost:2, q:8, info:'Turns an idea or trend into a ready-to-shoot script — hook, body and CTA. Each variant (angle or platform version) is billed separately so you can A/B test.'},
+      {n:'Caption generation', cost:1, q:12, info:'Writes platform-ready captions with hashtags tuned to your voice and audience. One credit per caption you generate.'},
+      {n:'Weekly growth plan', cost:3, q:4, info:'Your AI growth coach builds a weekly plan — what to post more of, best times, formats and hooks. Charged per plan generated.'},
+      {n:'DM automation reply (Instagram)', cost:1, q:20, info:'Auto-replies to Instagram DMs and comment triggers on your behalf — link drops, FAQs and lead capture. One credit per automated reply sent.'},
+      {n:'Media kit / pitch builder', cost:5, q:1, info:'Generates a polished media kit and brand pitch from your stats and best content. Charged per kit produced.'},
+      {n:'Rate &amp; earnings advice', cost:2, q:4, info:'Earnings copilot suggests the ideal rate to quote, flags under-pricing vs peers and recommends the best deals to take. Charged per advice query.'},
+      {n:'Brand-fit matching', cost:3, q:3, info:'Matches you with brands and affiliate/barter opportunities that fit your niche and audience, with "best next collaboration" nudges. Charged per match run.'},
+    ],
+    plans: [
+      {name:'Free', limit:30, desc:'₹0 · 30 credits / month — try the AI tools.'},
+      {name:'Pro', limit:500, desc:'₹499/mo · 500 credits — growth coach + script gen.'},
+      {name:'Elite', limit:2000, desc:'₹1,499/mo · 2,000 credits — advanced analytics + DM automation.'}
+    ]
+  }
+};
+let calcMode = 'brand';
+let actions = calcData[calcMode].actions;
+let plans = calcData[calcMode].plans;
 const actListEl = document.getElementById('actList');
-actions.forEach((a,i)=>{
-  const row = document.createElement('div');
-  row.className='act';
-  row.innerHTML = `<div class="name">${a.n}<span class="info" tabindex="0" role="button" aria-label="${a.n}: ${a.info.replace(/"/g,'&quot;')}">i<span class="tip">${a.info}</span></span></div><div class="cost">${a.cost} cr · each</div>
-    <div class="stepper"><button data-d="-1">−</button><div class="qty" id="q${i}">${a.q}</div><button data-d="1">+</button></div>`;
-  actListEl.appendChild(row);
-  row.querySelectorAll('button').forEach(b=> b.addEventListener('click', ()=>{
-    a.q = Math.max(0, a.q + (+b.dataset.d));
-    document.getElementById('q'+i).textContent = a.q; recalc();
-  }));
-});
+function renderActions(){
+  actions = calcData[calcMode].actions;
+  plans = calcData[calcMode].plans;
+  document.getElementById('calcHint').innerHTML = calcData[calcMode].hint;
+  actListEl.innerHTML = '';
+  actions.forEach((a,i)=>{
+    const row = document.createElement('div');
+    row.className='act';
+    row.innerHTML = `<div class="name">${a.n}<span class="info" tabindex="0" role="button" aria-label="${a.n}: ${a.info.replace(/"/g,'&quot;')}">i<span class="tip">${a.info}</span></span></div><div class="cost">${a.cost} cr · each</div>
+      <div class="stepper"><button data-d="-1">−</button><div class="qty" id="q${i}">${a.q}</div><button data-d="1">+</button></div>`;
+    actListEl.appendChild(row);
+    row.querySelectorAll('button').forEach(b=> b.addEventListener('click', ()=>{
+      a.q = Math.max(0, a.q + (+b.dataset.d));
+      document.getElementById('q'+i).textContent = a.q; recalc();
+    }));
+  });
+  recalc();
+}
 function recalc(){
   const total = actions.reduce((s,a)=> s + a.cost*a.q, 0);
   document.getElementById('totalCredits').textContent = total.toLocaleString();
@@ -566,7 +606,12 @@ function recalc(){
     ? 'beyond Scale — talk to us about Enterprise'
     : `${total.toLocaleString()} of ${plan.limit.toLocaleString()} in ${plan.name.split(' ')[0]}`;
 }
-recalc();
+renderActions();
+
+// ---------- Calculator audience toggle ----------
+const segCB=document.getElementById('segCalcBrand'), segCC=document.getElementById('segCalcCreator');
+segCB.onclick=()=>{calcMode='brand';segCB.classList.add('on');segCC.classList.remove('on');renderActions();};
+segCC.onclick=()=>{calcMode='creator';segCC.classList.add('on');segCB.classList.remove('on');renderActions();};
 
 // ---------- Pricing toggle ----------
 const segB=document.getElementById('segBrand'), segC=document.getElementById('segCreator');
